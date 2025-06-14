@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>Ulu lu lu</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #cceeff;
+      font-family: sans-serif;
+    }
+
+    #game {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://i.imgur.com/syBtd8p.jpg');
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    .sunbir, .mehedi {
+      position: absolute;
+      bottom: 10px;
+      width: 60px;
+      height: 60px;
+      background-size: cover;
+    }
+
+    .sunbir {
+      left: 100px;
+      background-image: url('https://i.imgur.com/lsE9a7Z.png'); /* Cartoon boy */
+    }
+
+    .mehedi {
+      left: 20px;
+      background-image: url('https://i.imgur.com/I66W5zM.png'); /* Cartoon police */
+    }
+
+    .obstacle {
+      position: absolute;
+      bottom: 10px;
+      width: 40px;
+      height: 40px;
+      background-color: black;
+      border-radius: 5px;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 24px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 5px 10px;
+      border-radius: 8px;
+    }
+
+    #gameOver {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 36px;
+      background: red;
+      color: white;
+      padding: 20px 40px;
+      display: none;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="score">স্কোর: 0</div>
+    <div class="mehedi" id="mehedi"></div>
+    <div class="sunbir" id="sunbir"></div>
+    <div id="gameOver">Game Over! Mehedi ভাই ধরে ফেলেছে!</div>
+  </div>
+
+  <script>
+    const sunbir = document.getElementById("sunbir");
+    const mehedi = document.getElementById("mehedi");
+    const game = document.getElementById("game");
+    const scoreText = document.getElementById("score");
+    const gameOverText = document.getElementById("gameOver");
+
+    let position = 100;
+    let score = 0;
+    let gameOver = false;
+
+    // Movement
+    document.addEventListener("keydown", function(e) {
+      if (gameOver) return;
+
+      if (e.key === "ArrowRight") {
+        position += 20;
+      } else if (e.key === "ArrowLeft") {
+        position -= 20;
+      }
+
+      if (position < 0) position = 0;
+      if (position > window.innerWidth - 60) position = window.innerWidth - 60;
+      sunbir.style.left = position + "px";
+    });
+
+    // Score
+    setInterval(() => {
+      if (gameOver) return;
+      score++;
+      scoreText.innerText = "স্কোর: " + score;
+    }, 1000);
+
+    // Obstacles
+    function createObstacle() {
+      if (gameOver) return;
+      const obs = document.createElement("div");
+      obs.classList.add("obstacle");
+      obs.style.left = Math.floor(Math.random() * (window.innerWidth - 40)) + "px";
+      game.appendChild(obs);
+
+      let bottom = 100;
+      const fall = setInterval(() => {
+        if (gameOver) {
+          clearInterval(fall);
+          return;
+        }
+
+        bottom -= 5;
+        obs.style.bottom = bottom + "px";
+
+        const obsPos = obs.getBoundingClientRect();
+        const sunPos = sunbir.getBoundingClientRect();
+
+        if (
+          obsPos.bottom >= sunPos.top &&
+          obsPos.left < sunPos.right &&
+          obsPos.right > sunPos.left
+        ) {
+          endGame();
+          clearInterval(fall);
+        }
+
+        if (bottom < -50) {
+          clearInterval(fall);
+          game.removeChild(obs);
+        }
+      }, 50);
+    }
+
+    setInterval(createObstacle, 1500);
+
+    // Mehedi chasing
+    let mehediLeft = 20;
+    setInterval(() => {
+      if (gameOver) return;
+
+      if (mehediLeft < position - 50) {
+        mehediLeft += 2;
+      } else if (mehediLeft > position - 50) {
+        mehediLeft -= 2;
+      }
+      mehedi.style.left = mehediLeft + "px";
+
+      const mehPos = mehedi.getBoundingClientRect();
+      const sunPos = sunbir.getBoundingClientRect();
+      if (
+        mehPos.left < sunPos.right &&
+        mehPos.right > sunPos.left
+      ) {
+        endGame();
+      }
+    }, 50);
+
+    function endGame() {
+      gameOver = true;
+      gameOverText.style.display = "block";
+    }
+  </script>
+</body>
+</html>
